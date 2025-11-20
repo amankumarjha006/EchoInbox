@@ -1,287 +1,271 @@
-'use client'
+"use client";
 
-import React, { useState, useEffect, useCallback } from 'react'
-import { useSession } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
-import axios, { AxiosError } from 'axios'
-import { toast } from 'sonner'
-import { Button } from '@/components/ui/button'
-import { Textarea } from '@/components/ui/textarea'
+import React, { useState, useEffect, useCallback } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import axios from "axios";
+import { toast } from "sonner";
+import { motion } from "framer-motion";
+
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card'
-import { Separator } from '@/components/ui/separator'
-import { Switch } from '@/components/ui/switch'
-import { Loader2, Plus, MessageSquare, Share2, Trash2, ExternalLink } from 'lucide-react'
-import { ApiResponse } from '@/types/ApiResponse'
-import Link from 'next/link'
+} from "@/components/ui/card";
 
-interface Reply {
-  _id: string
-  content: string
-  createdAt: Date
-}
+import { Loader2, Plus, MessageSquare, Share2, User as UserIcon  } from "lucide-react";
+import PostCard from "@/components/PostCard";
 
 interface Post {
-  _id: string
-  content: string
-  isAcceptingMessages: boolean
-  replies: Reply[]
-  createdAt: Date
+  _id: string;
+  content: string;
+  createdAt: string;
+  isAcceptingMessages: boolean;
+  replies: any[];
 }
 
 export default function Dashboard() {
-  const { data: session, status } = useSession()
-  const router = useRouter()
-  
-  const [posts, setPosts] = useState<Post[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [newPostContent, setNewPostContent] = useState('')
-  const [isCreating, setIsCreating] = useState(false)
+  const { data: session, status } = useSession();
+  const router = useRouter();
 
-  useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.replace('/sign-in')
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [newPostContent, setNewPostContent] = useState("");
+  const [isCreating, setIsCreating] = useState(false);
+
+  const handleShare = async () => {
+    const username = session?.user?.username;
+    if (!username) {
+      toast.error("Username missing");
+      return;
     }
-  }, [status, router])
 
-  const fetchPosts = useCallback(async () => {
-    if (!session) return
-    
+    const profileUrl = `${window.location.origin}/u/${username}`;
+
     try {
-      const response = await axios.get<ApiResponse & { posts: Post[] }>('/api/posts')
-      setPosts(response.data.posts || [])
-    } catch (error) {
-      const axiosError = error as AxiosError<ApiResponse>
-      toast.error(axiosError.response?.data.message || 'Failed to fetch posts')
-    } finally {
-      setIsLoading(false)
+      if (navigator.share) {
+        await navigator.share({
+          title: "Check out my profile!",
+          url: profileUrl,
+        });
+      } else {
+        await navigator.clipboard.writeText(profileUrl);
+        toast.success("Profile link copied to clipboard!");
+      }
+    } catch (err) {
+      console.error("Share failed:", err);
     }
-  }, [session])
+  };
+
+  // Redirect if not logged in
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.replace("/sign-in");
+    }
+  }, [status, router]);
+
+  // Fetch posts
+  const fetchPosts = useCallback(async () => {
+    if (!session) return;
+
+    try {
+      const res = await axios.get("/api/posts");
+      setPosts(res.data.posts || []);
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to load posts");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [session]);
 
   useEffect(() => {
-    if (session) {
-      fetchPosts()
-    }
-  }, [session, fetchPosts])
+    if (session) fetchPosts();
+  }, [session, fetchPosts]);
 
+  // Create a post
   const handleCreatePost = async () => {
     if (!newPostContent.trim()) {
-      toast.error('Please enter post content')
-      return
+      toast.error("Write something first");
+      return;
     }
 
-    setIsCreating(true)
+    setIsCreating(true);
     try {
-      await axios.post('/api/posts', { content: newPostContent })
-      toast.success('Post created successfully!')
-      setNewPostContent('')
-      fetchPosts()
-    } catch (error: any) {
-      const axiosError = error as AxiosError<ApiResponse>
-      toast.error(axiosError.response?.data?.message || 'Failed to create post')
+      await axios.post("/api/posts", { content: newPostContent });
+      toast.success("Post created successfully! 🎉");
+      setNewPostContent("");
+      fetchPosts();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to create post");
     } finally {
-      setIsCreating(false)
+      setIsCreating(false);
     }
-  }
+  };
 
-  const handleToggleMessages = async (postId: string, currentState: boolean) => {
+  // Toggle accepting messages
+  const handleToggleMessages = async (id: string, prevState: boolean) => {
     try {
-      await axios.patch(`/api/posts/${postId}/toggle-messages`, {
-        isAcceptingMessages: !currentState,
-      })
-      toast.success(
-        !currentState ? 'Now accepting replies' : 'Stopped accepting replies'
-      )
-      fetchPosts()
-    } catch (error) {
-      const axiosError = error as AxiosError<ApiResponse>
-      toast.error(axiosError.response?.data?.message || 'Failed to update settings')
+      await axios.patch(`/api/posts/${id}/toggle-messages`, {
+        isAcceptingMessages: !prevState,
+      });
+      setPosts((prev) =>
+        prev.map((p) =>
+          p._id === id ? { ...p, isAcceptingMessages: !prevState } : p
+        )
+      );
+      toast.success(prevState ? "Closed replies" : "Now accepting replies");
+    } catch {
+      toast.error("Failed to update");
     }
+  };
+
+  // Delete post
+ const handleDeletePost = async (id: string) => {
+  try {
+    await axios.delete(`/api/posts/${id}`);
+    setPosts((prev) => prev.filter((p) => p._id !== id));
+    toast.success("Post deleted");
+  } catch {
+    toast.error("Failed to delete post");
   }
+};
 
-  const handleDeletePost = async (postId: string) => {
-    if (!confirm('Are you sure you want to delete this post and all its replies?')) {
-      return
-    }
 
-    try {
-      await axios.delete(`/api/posts/${postId}`)
-      toast.success('Post deleted successfully')
-      fetchPosts()
-    } catch (error) {
-      const axiosError = error as AxiosError<ApiResponse>
-      toast.error(axiosError.response?.data?.message || 'Failed to delete post')
-    }
-  }
-
-  const copyPostLink = (postId: string) => {
-    const link = `${window.location.origin}/u/${session?.user?.username}/posts/${postId}`
-    navigator.clipboard.writeText(link)
-    toast.success('Link copied to clipboard!')
-  }
-
-  if (status === 'loading' || isLoading) {
+  if (status === "loading" || isLoading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin" />
+      <div className="flex justify-center items-center min-h-screen ">
+        <div className="text-center space-y-4">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
+          <p className="text-sm text-muted-foreground">Loading your dashboard...</p>
+        </div>
       </div>
-    )
+    );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-2">Dashboard</h1>
-        <p className="text-muted-foreground">
-          Welcome back, {session?.user?.username}!
-        </p>
-      </div>
+    <div className="min-h-screen ">
+      <div className="container mx-auto px-4 py-8 md:py-12 max-w-5xl space-y-8">
+        {/* HEADER */}
+       <div className="text-center space-y-6">
+  <div className="flex justify-center">
+    <div className="rounded-full h-24 w-24 bg-primary/10 flex items-center justify-center">
+      <UserIcon className="h-12 w-12 text-primary" />
+    </div>
+  </div>
 
-      {/* Create New Post */}
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle>Create a New Post</CardTitle>
-          <CardDescription>
-            Share a question or thought. People can reply anonymously.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Textarea
-            placeholder="What's on your mind? Ask a question or share a thought..."
-            value={newPostContent}
-            onChange={(e) => setNewPostContent(e.target.value)}
-            maxLength={500}
-            rows={4}
-            className="mb-4"
-          />
-          <div className="flex justify-between items-center">
-            <span className="text-sm text-muted-foreground">
-              {newPostContent.length}/500
-            </span>
-            <Button onClick={handleCreatePost} disabled={isCreating}>
-              {isCreating ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating...
-                </>
-              ) : (
-                <>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Create Post
-                </>
-              )}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+  <div>
+    <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
+      Welcome back, {session?.user?.username}
+    </h1>
+    <p className="text-muted-foreground mt-2">
+      Manage your posts, replies and everything else in your creative space.
+    </p>
+  </div>
 
-      {/* User's Posts */}
-      <div className="mb-4">
-        <h2 className="text-2xl font-bold">Your Posts</h2>
-        <p className="text-sm text-muted-foreground">
-          Manage your posts and view replies
-        </p>
-      </div>
-      
-      {posts.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center text-muted-foreground">
-            <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p className="text-lg font-medium mb-2">No posts yet</p>
-            <p className="text-sm">Create your first post above to get started!</p>
+  <Button variant="outline" className="gap-2" onClick={handleShare}>
+    <Share2 className="h-4 w-4" />
+    Share Profile
+  </Button>
+</div>
+
+
+        {/* CREATE POST */}
+        <Card className="shadow-xl border-muted/30 bg-background/60 backdrop-blur-sm">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Plus className="h-5 w-5" />
+              Create a New Post
+            </CardTitle>
+            <CardDescription>
+              Share a thought, question, or idea. Get anonymous feedback!
+            </CardDescription>
+          </CardHeader>
+
+          <CardContent className="space-y-4">
+            <Textarea
+              placeholder="What's on your mind? 💭"
+              maxLength={500}
+              rows={4}
+              value={newPostContent}
+              onChange={(e) => setNewPostContent(e.target.value)}
+              className="resize-none focus-visible:ring-primary/40 bg-muted/10"
+            />
+
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-muted-foreground">
+                {newPostContent.length}/500 characters
+              </span>
+
+              <Button
+              variant= "black"
+                disabled={isCreating || !newPostContent.trim()}
+                onClick={handleCreatePost}
+                className="gap-2"
+              >
+                {isCreating ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Posting...
+                  </>
+                ) : (
+                  <>
+                    <Plus className="h-4 w-4" />
+                    Post
+                  </>
+                )}
+              </Button>
+            </div>
           </CardContent>
         </Card>
-      ) : (
-        <div className="space-y-6">
-          {posts.map((post) => (
-            <Card key={post._id}>
-              <CardHeader>
-                <div className="flex justify-between items-start gap-4">
-                  <div className="flex-1">
-                    <CardTitle className="text-lg mb-2">{post.content}</CardTitle>
-                    <CardDescription>
-                      {new Date(post.createdAt).toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })} • {post.replies.length} {post.replies.length === 1 ? 'reply' : 'replies'}
-                    </CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between mb-4 pb-4 border-b">
-                  <div className="flex items-center gap-2">
-                    <Switch
-                      checked={post.isAcceptingMessages}
-                      onCheckedChange={() =>
-                        handleToggleMessages(post._id, post.isAcceptingMessages)
-                      }
-                    />
-                    <span className="text-sm">
-                      {post.isAcceptingMessages
-                        ? 'Accepting replies'
-                        : 'Not accepting replies'}
-                    </span>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => copyPostLink(post._id)}
-                    >
-                      <Share2 className="h-4 w-4 mr-2" />
-                      Copy Link
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      asChild
-                    >
-                      <Link href={`/u/${session?.user?.username}/posts/${post._id}`}>
-                        <ExternalLink className="h-4 w-4 mr-2" />
-                        View Replies
-                      </Link>
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => handleDeletePost(post._id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
 
-                <div className="bg-muted/30 rounded-lg p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <MessageSquare className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm font-medium">
-                      {post.replies.length} Anonymous {post.replies.length === 1 ? 'Reply' : 'Replies'}
-                    </span>
-                  </div>
-                  {post.replies.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">
-                      No replies yet. Share your post link to get responses!
-                    </p>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">
-                      Click "View Replies" to see all responses
-                    </p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+        {/* POSTS SECTION */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold">Your Posts</h2>
+              <p className="text-sm text-muted-foreground">
+                {posts.length} {posts.length === 1 ? "post" : "posts"} total
+              </p>
+            </div>
+          </div>
+
+          {/* POST LIST */}
+          {posts.length === 0 ? (
+            <Card className="border-none shadow-none bg-transparent">
+  <CardContent className="text-center py-20 space-y-4 opacity-80">
+    <MessageSquare className="h-10 w-10 mx-auto text-muted-foreground" />
+    <h3 className="font-semibold text-lg">You're all set!</h3>
+    <p className="text-sm text-muted-foreground">
+      Create your first post above and start receiving anonymous messages.
+    </p>
+  </CardContent>
+</Card>
+
+          ) : (
+            <div className="grid gap-6">
+              {posts.map((post) => (
+                <PostCard
+                  key={post._id}
+                  postId={post._id}
+                  content={post.content}
+                  createdAt={new Date(post.createdAt)}
+                  isAcceptingMessages={post.isAcceptingMessages}
+                  repliesCount={post.replies.length}
+                  username={session?.user?.username || ""}
+                  onToggleAccepting={() =>
+                    handleToggleMessages(post._id, post.isAcceptingMessages)
+                  }
+                  onDelete={() => handleDeletePost(post._id)}
+                />
+              ))}
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
-  )
+  );
 }
