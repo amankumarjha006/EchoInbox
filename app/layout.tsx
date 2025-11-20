@@ -3,6 +3,7 @@ import AuthProvider from "@/context/AuthProvider";
 import './globals.css'
 import { Toaster } from "@/components/ui/sonner"
 import { Inter } from 'next/font/google'
+import { ThemeProvider } from "@/components/theme-provider";
 
 const inter = Inter({
   subsets: ['latin'],
@@ -20,14 +21,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <AuthProvider>
       <body
         className={`${inter.className} `}
       >
+         <ThemeProvider >
 
           {children}
           <Toaster/>
+          </ThemeProvider>
       </body>
         </AuthProvider>
     </html>

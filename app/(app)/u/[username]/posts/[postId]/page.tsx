@@ -238,7 +238,7 @@ export default function PostDetailPage() {
 
         {isOwner && (
           <Card className="border-blue-500/50 bg-blue-500/5">
-            <CardContent className="py-6 text-center">
+            <CardContent className="py-2 text-center">
               <p className="text-sm font-medium text-blue-700 dark:text-blue-300">
                 👋 You're viewing your own post. Only you can see the replies below.
               </p>
@@ -253,7 +253,7 @@ export default function PostDetailPage() {
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-2xl font-bold flex items-center gap-2">
-                <MessageSquare className="h-6 w-6 text-primary" />
+                <MessageSquare className="h-5 w-6 text-primary" />
                 Replies ({post.replies.length})
               </h2>
               {!isOwner && (

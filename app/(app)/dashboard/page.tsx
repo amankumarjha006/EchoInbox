@@ -5,20 +5,23 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import { toast } from "sonner";
-import { motion } from "framer-motion";
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
+  CardDescription,
 } from "@/components/ui/card";
 
-import { Loader2, Plus, MessageSquare, Share2, User as UserIcon  } from "lucide-react";
+import { Loader2, Plus, MessageSquare, Share2, User as UserIcon } from "lucide-react";
 import PostCard from "@/components/PostCard";
+import ThemeToggle from "@/components/theme-toggle";
+
+// Framer Motion for smooth UI transitions
+import { motion } from "framer-motion";
 
 interface Post {
   _id: string;
@@ -37,36 +40,12 @@ export default function Dashboard() {
   const [newPostContent, setNewPostContent] = useState("");
   const [isCreating, setIsCreating] = useState(false);
 
-  const handleShare = async () => {
-    const username = session?.user?.username;
-    if (!username) {
-      toast.error("Username missing");
-      return;
-    }
-
-    const profileUrl = `${window.location.origin}/u/${username}`;
-
-    try {
-      if (navigator.share) {
-        await navigator.share({
-          title: "Check out my profile!",
-          url: profileUrl,
-        });
-      } else {
-        await navigator.clipboard.writeText(profileUrl);
-        toast.success("Profile link copied to clipboard!");
-      }
-    } catch (err) {
-      console.error("Share failed:", err);
-    }
-  };
+  
 
   // Redirect if not logged in
   useEffect(() => {
-    if (status === "unauthenticated") {
-      router.replace("/sign-in");
-    }
-  }, [status, router]);
+    if (status === "unauthenticated") router.replace("/sign-in");
+  }, [status]);
 
   // Fetch posts
   const fetchPosts = useCallback(async () => {
@@ -75,8 +54,8 @@ export default function Dashboard() {
     try {
       const res = await axios.get("/api/posts");
       setPosts(res.data.posts || []);
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || "Failed to load posts");
+    } catch {
+      toast.error("Failed to load posts");
     } finally {
       setIsLoading(false);
     }
@@ -86,7 +65,7 @@ export default function Dashboard() {
     if (session) fetchPosts();
   }, [session, fetchPosts]);
 
-  // Create a post
+  // Create post
   const handleCreatePost = async () => {
     if (!newPostContent.trim()) {
       toast.error("Write something first");
@@ -96,17 +75,15 @@ export default function Dashboard() {
     setIsCreating(true);
     try {
       await axios.post("/api/posts", { content: newPostContent });
-      toast.success("Post created successfully! 🎉");
+      toast.success("Post created!");
       setNewPostContent("");
       fetchPosts();
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || "Failed to create post");
     } finally {
       setIsCreating(false);
     }
   };
 
-  // Toggle accepting messages
+  // Toggle replies
   const handleToggleMessages = async (id: string, prevState: boolean) => {
     try {
       await axios.patch(`/api/posts/${id}/toggle-messages`, {
@@ -117,150 +94,128 @@ export default function Dashboard() {
           p._id === id ? { ...p, isAcceptingMessages: !prevState } : p
         )
       );
-      toast.success(prevState ? "Closed replies" : "Now accepting replies");
+      toast.success(prevState ? "Replies disabled" : "Replies enabled");
     } catch {
       toast.error("Failed to update");
     }
   };
 
   // Delete post
- const handleDeletePost = async (id: string) => {
-  try {
-    await axios.delete(`/api/posts/${id}`);
-    setPosts((prev) => prev.filter((p) => p._id !== id));
-    toast.success("Post deleted");
-  } catch {
-    toast.error("Failed to delete post");
-  }
-};
-
+  const handleDeletePost = async (id: string) => {
+    try {
+      await axios.delete(`/api/posts/${id}`);
+      setPosts((prev) => prev.filter((p) => p._id !== id));
+      toast.success("Post deleted");
+    } catch {
+      toast.error("Failed to delete post");
+    }
+  };
 
   if (status === "loading" || isLoading) {
     return (
-      <div className="flex justify-center items-center min-h-screen ">
-        <div className="text-center space-y-4">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
-          <p className="text-sm text-muted-foreground">Loading your dashboard...</p>
-        </div>
+      <div className="flex justify-center items-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen ">
-      <div className="container mx-auto px-4 py-8 md:py-12 max-w-5xl space-y-8">
-        {/* HEADER */}
-       <div className="text-center space-y-6">
-  <div className="flex justify-center">
-    <div className="rounded-full h-24 w-24 bg-primary/10 flex items-center justify-center">
-      <UserIcon className="h-12 w-12 text-primary" />
-    </div>
-  </div>
+    <div className="
+  min-h-screen">
+      
+     
 
-  <div>
-    <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-      Welcome back, {session?.user?.username}
-    </h1>
-    <p className="text-muted-foreground mt-2">
-      Manage your posts, replies and everything else in your creative space.
-    </p>
-  </div>
+      <div className="container mx-auto px-4 py-10 max-w-4xl space-y-10">
 
-  <Button variant="outline" className="gap-2" onClick={handleShare}>
-    <Share2 className="h-4 w-4" />
-    Share Profile
-  </Button>
-</div>
+        {/* HEADER SECTION */}
+        <div className="text-center space-y-6">
+          <div className="flex justify-center">
+            <div className="rounded-full h-24 w-24 bg-primary/10 flex items-center justify-center shadow-md">
+              <UserIcon className="h-12 w-12 text-primary" />
+            </div>
+          </div>
 
+          <div>
+            <h2 className="text-4xl font-bold tracking-tight">
+              Welcome back, {session?.user?.username}
+            </h2>
+            <p className="text-muted-foreground mt-2">
+              Manage your posts and anonymous replies.
+            </p>
+          </div>
+        </div>
 
         {/* CREATE POST */}
-        <Card className="shadow-xl border-muted/30 bg-background/60 backdrop-blur-sm">
+        <Card className="shadow-xl border-border/50">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Plus className="h-5 w-5" />
-              Create a New Post
+              Create a new post
             </CardTitle>
             <CardDescription>
-              Share a thought, question, or idea. Get anonymous feedback!
+              Share your thoughts. People will reply anonymously.
             </CardDescription>
           </CardHeader>
 
           <CardContent className="space-y-4">
             <Textarea
-              placeholder="What's on your mind? 💭"
-              maxLength={500}
-              rows={4}
+              placeholder="Write something..."
               value={newPostContent}
               onChange={(e) => setNewPostContent(e.target.value)}
-              className="resize-none focus-visible:ring-primary/40 bg-muted/10"
+              maxLength={500}
+              rows={4}
+              className="bg-muted/20 focus-visible:ring-primary"
             />
 
             <div className="flex items-center justify-between">
               <span className="text-xs text-muted-foreground">
-                {newPostContent.length}/500 characters
+                {newPostContent.length}/500
               </span>
 
-              <Button
-              variant= "black"
-                disabled={isCreating || !newPostContent.trim()}
-                onClick={handleCreatePost}
-                className="gap-2"
-              >
+              <Button disabled={isCreating} onClick={handleCreatePost}>
                 {isCreating ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Posting...
-                  </>
+                  <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  <>
-                    <Plus className="h-4 w-4" />
-                    Post
-                  </>
+                  "Post"
                 )}
               </Button>
             </div>
           </CardContent>
         </Card>
 
-        {/* POSTS SECTION */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-bold">Your Posts</h2>
-              <p className="text-sm text-muted-foreground">
-                {posts.length} {posts.length === 1 ? "post" : "posts"} total
-              </p>
-            </div>
-          </div>
+        {/* POSTS */}
+        <div className="space-y-6">
+          <h2 className="text-2xl font-semibold">Your Posts</h2>
 
-          {/* POST LIST */}
           {posts.length === 0 ? (
-            <Card className="border-none shadow-none bg-transparent">
-  <CardContent className="text-center py-20 space-y-4 opacity-80">
-    <MessageSquare className="h-10 w-10 mx-auto text-muted-foreground" />
-    <h3 className="font-semibold text-lg">You're all set!</h3>
-    <p className="text-sm text-muted-foreground">
-      Create your first post above and start receiving anonymous messages.
-    </p>
-  </CardContent>
-</Card>
-
+            <Card className="border-dashed shadow-none text-center py-16">
+              <MessageSquare className="h-10 w-10 mx-auto text-muted-foreground" />
+              <p className="mt-4 text-muted-foreground">
+                You haven’t posted anything yet.
+              </p>
+            </Card>
           ) : (
-            <div className="grid gap-6">
+            <div className="space-y-6">
               {posts.map((post) => (
-                <PostCard
+                <motion.div
                   key={post._id}
-                  postId={post._id}
-                  content={post.content}
-                  createdAt={new Date(post.createdAt)}
-                  isAcceptingMessages={post.isAcceptingMessages}
-                  repliesCount={post.replies.length}
-                  username={session?.user?.username || ""}
-                  onToggleAccepting={() =>
-                    handleToggleMessages(post._id, post.isAcceptingMessages)
-                  }
-                  onDelete={() => handleDeletePost(post._id)}
-                />
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <PostCard
+                    postId={post._id}
+                    content={post.content}
+                    createdAt={new Date(post.createdAt)}
+                    isAcceptingMessages={post.isAcceptingMessages}
+                    repliesCount={post.replies.length}
+                    username={session?.user?.username || ""}
+                    onToggleAccepting={() =>
+                      handleToggleMessages(post._id, post.isAcceptingMessages)
+                    }
+                    onDelete={() => handleDeletePost(post._id)}
+                  />
+                </motion.div>
               ))}
             </div>
           )}
