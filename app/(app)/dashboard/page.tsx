@@ -16,7 +16,7 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 
-import { Loader2, Plus, MessageSquare, Share2, User as UserIcon } from "lucide-react";
+import { Loader2, Plus, MessageSquare, Share2, LayoutDashboard } from "lucide-react";
 import PostCard from "@/components/PostCard";
 import ThemeToggle from "@/components/theme-toggle";
 
@@ -131,7 +131,7 @@ export default function Dashboard() {
         <div className="text-center space-y-6">
           <div className="flex justify-center">
             <div className="rounded-full h-24 w-24 bg-primary/10 flex items-center justify-center shadow-md">
-              <UserIcon className="h-12 w-12 text-primary" />
+              <LayoutDashboard className="h-12 w-12 text-primary" />
             </div>
           </div>
 

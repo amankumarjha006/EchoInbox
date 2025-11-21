@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation'
 import axios, { AxiosError } from 'axios'
 import { toast } from 'sonner'
 import Link from 'next/link'
-import { Loader2, MessageSquare, User as UserIcon } from 'lucide-react'
+import { Loader2, MessageCircle, User as UserIcon } from 'lucide-react'
 import { ApiResponse } from '@/types/ApiResponse'
 import {
   Card,
@@ -80,7 +80,7 @@ export default function PublicProfilePage() {
       {posts.length === 0 ? (
         <Card className="bg-card/40 shadow-sm backdrop-blur-sm">
           <CardContent className="py-12 text-center text-muted-foreground">
-            <MessageSquare className="h-10 w-10 mx-auto mb-3 opacity-50" />
+            <MessageCircle className="h-10 w-10 mx-auto mb-3 opacity-50" />
             <p className="font-medium text-base mb-1">No posts yet</p>
             <p className="text-xs">@{username} has not posted anything</p>
           </CardContent>
@@ -120,7 +120,7 @@ export default function PublicProfilePage() {
                       </CardDescription>
                     </div>
 
-                    <MessageSquare className="h-4 w-4 text-muted-foreground opacity-70" />
+                    <MessageCircle className="h-4 w-4 text-muted-foreground opacity-70" />
                   </div>
                 </CardHeader>
               </Card>

@@ -18,12 +18,12 @@ import { Separator } from '@/components/ui/separator'
 import { 
   Loader2, 
   Send, 
-  MessageSquare, 
+  MessageCircle , 
   ArrowLeft, 
   User as UserIcon,
   Calendar,
   Lock,
-  Sparkles
+  PenSquare
 } from 'lucide-react'
 import { ApiResponse } from '@/types/ApiResponse'
 import MessageCard from '@/components/MessageCard'
@@ -182,7 +182,7 @@ export default function PostDetailPage() {
           <Card className="shadow-lg border-primary/20">
             <CardHeader>
               <div className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-primary" />
+                <PenSquare className="h-5 w-5 text-primary" />
                 <CardTitle>Send Anonymous Reply</CardTitle>
               </div>
               <CardDescription>
@@ -194,13 +194,13 @@ export default function PostDetailPage() {
                 placeholder="Write your reply..."
                 value={replyContent}
                 onChange={(e) => setReplyContent(e.target.value)}
-                maxLength={300}
+                maxLength={500}
                 rows={4}
                 className="resize-none focus-visible:ring-primary"
               />
               <div className="flex justify-between items-center">
                 <span className="text-xs text-muted-foreground">
-                  {replyContent.length}/300 characters
+                  {replyContent.length}/500 characters
                 </span>
                 <Button 
                   onClick={handleSendReply} 
@@ -239,7 +239,7 @@ export default function PostDetailPage() {
         {isOwner && (
           <Card className="border-blue-500/50 bg-blue-500/5">
             <CardContent className="py-2 text-center">
-              <p className="text-sm font-medium text-blue-700 dark:text-blue-300">
+              <p className="text-sm font-medium text-blue-700 dark:text-blue-500">
                 👋 You're viewing your own post. Only you can see the replies below.
               </p>
             </CardContent>
@@ -253,7 +253,7 @@ export default function PostDetailPage() {
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-2xl font-bold flex items-center gap-2">
-                <MessageSquare className="h-5 w-6 text-primary" />
+                <MessageCircle  className="h-5 w-6 text-primary" />
                 Replies ({post.replies.length})
               </h2>
               {!isOwner && (
@@ -269,7 +269,7 @@ export default function PostDetailPage() {
               <Card className="border-dashed">
                 <CardContent className="py-16 text-center space-y-4">
                   <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted">
-                    <MessageSquare className="h-8 w-8 text-muted-foreground" />
+                    <MessageCircle  className="h-8 w-8 text-muted-foreground" />
                   </div>
                   <div className="space-y-2">
                     <p className="font-semibold text-lg">No replies yet</p>

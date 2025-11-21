@@ -8,7 +8,13 @@ const config: Config = {
     "./ui/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+  body: ["var(--font-inter)"],
+  display: ["var(--font-dm-serif)"],
+},
+
+    },
   },
   plugins: [],
 };

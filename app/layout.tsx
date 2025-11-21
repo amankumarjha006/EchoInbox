@@ -1,14 +1,21 @@
 import type { Metadata } from "next";
 import AuthProvider from "@/context/AuthProvider";
-import './globals.css'
-import { Toaster } from "@/components/ui/sonner"
-import { Inter } from 'next/font/google'
+import "./globals.css";
+import { Toaster } from "@/components/ui/sonner";
+import { Inter, DM_Serif_Display } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 
 const inter = Inter({
-  subsets: ['latin'],
-  display: 'swap',
-})
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-inter",
+});
+
+const dmSerifDisplay = DM_Serif_Display({
+  weight: "400",
+  subsets: ["latin"],
+  variable: "--font-dm-serif",
+});
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -23,16 +30,13 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <AuthProvider>
-      <body
-        className={`${inter.className} `}
-      >
-         <ThemeProvider >
-
-          {children}
-          <Toaster/>
+        <body className={`${inter.variable} ${dmSerifDisplay.variable} font-body`}>
+          <ThemeProvider>
+            {children}
+            <Toaster />
           </ThemeProvider>
-      </body>
-        </AuthProvider>
+        </body>
+      </AuthProvider>
     </html>
   );
 }
