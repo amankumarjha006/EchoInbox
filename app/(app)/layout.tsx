@@ -1,6 +1,6 @@
-// app/(dashboard)/layout.tsx or wherever your dashboard layout is
 import React from "react";
 import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 
 export default function DashboardLayout({
   children,
@@ -8,11 +8,12 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen">
-      <Navbar/>
-      <div className="pt-20">
-      {children}
+    <div className="min-h-screen flex flex-col ">
+      <Navbar />
+      <div className="grow pt-16">
+        {children}
       </div>
+      <Footer />
     </div>
   );
 }

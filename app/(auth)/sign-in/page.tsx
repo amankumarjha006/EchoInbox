@@ -21,7 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { signInSchema } from "@/schemas/signInSchema";
 import { signIn } from "next-auth/react";
-import { LogIn, Loader2 } from "lucide-react";
+import { LogIn, Loader2, Sparkles } from "lucide-react";
 
 import ThemeToggle from "@/components/theme-toggle";
 
@@ -54,33 +54,27 @@ const Page = () => {
   };
 
   return (
-    <div className="
-      flex justify-center items-center min-h-screen
-      bg-linear-to-br from-[#ffffff] to-[#f3f3f3]
-      dark:bg-black dark:from-black dark:to-black
-      transition-colors relative px-4
-    ">
+    <div className="flex justify-center items-center min-h-screen bg-background relative overflow-hidden px-4">
+      {/* Background Elements */}
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-background z-0" />
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-cyan-500/10 rounded-full blur-3xl animate-pulse-slow pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-teal-500/10 rounded-full blur-3xl animate-pulse-slow delay-1000 pointer-events-none" />
+
       {/* THEME TOGGLE BUTTON */}
-      <div className="absolute top-4 right-4">
+      <div className="absolute top-4 right-4 z-20">
         <ThemeToggle />
       </div>
 
-      <div className="
-        w-full max-w-md p-6 sm:p-8 space-y-6 sm:space-y-8 rounded-lg
-        shadow-lg bg-white/80 dark:bg-[#1a1a1a]/90
-        backdrop-blur border border-black/10 dark:border-white/10
-        transition-all
-      ">
-        <div className="text-center">
-          <h1 className="
-            text-3xl sm:text-4xl font-bold tracking-tight
-            mb-4 sm:mb-6 flex gap-2 justify-center
-          ">
-            Welcome Back!
+      <div className="w-full max-w-md p-8 space-y-8 rounded-2xl glass-card relative z-10 animate-slide-up">
+        <div className="text-center space-y-2">
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10 mb-4">
+            <Sparkles className="h-6 w-6 text-primary" />
+          </div>
+          <h1 className="text-3xl font-bold tracking-tight font-display">
+            Welcome Back
           </h1>
-
-          <p className="text-muted-foreground text-sm sm:text-base">
-            Sign in to enter your anonymous world
+          <p className="text-muted-foreground">
+            Sign in to continue your anonymous journey
           </p>
         </div>
 
@@ -98,7 +92,7 @@ const Page = () => {
                 <FormItem>
                   <FormLabel>Email / Username</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter email or username" {...field} />
+                    <Input placeholder="Enter email or username" {...field} className="bg-background/50 border-white/10 focus:border-primary/50 transition-all" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -117,6 +111,7 @@ const Page = () => {
                       type="password"
                       placeholder="Enter password"
                       {...field}
+                      className="bg-background/50 border-white/10 focus:border-primary/50 transition-all"
                     />
                   </FormControl>
                   <FormMessage />
@@ -128,16 +123,16 @@ const Page = () => {
             <Button
               type="submit"
               disabled={form.formState.isSubmitting}
-              className="w-full flex items-center justify-center gap-2 px-5 py-3"
+              className="w-full h-11 shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all"
             >
               {form.formState.isSubmitting ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
                   Please wait
                 </>
               ) : (
                 <>
-                  <LogIn className="h-4 w-4" />
+                  <LogIn className="h-4 w-4 mr-2" />
                   Sign In
                 </>
               )}
@@ -145,14 +140,14 @@ const Page = () => {
           </form>
         </Form>
 
-        <div className="text-center mt-2">
-          <p>
+        <div className="text-center pt-4 border-t border-white/10">
+          <p className="text-sm text-muted-foreground">
             New to WhisperBack?{" "}
             <Link
               href="/sign-up"
-              className="text-blue-600 dark:text-blue-400 hover:underline"
+              className="text-primary font-medium hover:underline transition-all"
             >
-              Sign up
+              Create an account
             </Link>
           </p>
         </div>

@@ -2,10 +2,8 @@
 import React from 'react'
 import {
     Card,
-    CardContent,
     CardDescription,
     CardHeader,
-    CardTitle,
 } from "@/components/ui/card"
 import {
     AlertDialog,
@@ -19,7 +17,7 @@ import {
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { Button } from './ui/button'
-import { X } from 'lucide-react'
+import { X, Clock } from 'lucide-react'
 import { toast } from 'sonner'
 import axios, { AxiosError } from 'axios'
 import { ApiResponse } from '@/types/ApiResponse'
@@ -37,7 +35,7 @@ type MessageCardProps = {
 }
 
 const MessageCard = ({ reply, postId, onReplyDelete }: MessageCardProps) => {
-    
+
     const handleDeleteConfirm = async () => {
         try {
             const response = await axios.delete<ApiResponse>(
@@ -54,12 +52,15 @@ const MessageCard = ({ reply, postId, onReplyDelete }: MessageCardProps) => {
     }
 
     return (
-        <Card>
-            <CardHeader>
+        <Card className="relative overflow-hidden transition-all hover:shadow-md border-border/50 bg-card/50 backdrop-blur-sm group">
+            <CardHeader className="p-5">
                 <div className="flex justify-between items-start gap-4">
-                    <div className="flex-1">
-                        <p className="text-sm mb-2">{reply.content}</p>
-                        <CardDescription className="text-xs">
+                    <div className="flex-1 space-y-3">
+                        <div className="relative pl-4 border-l-2 border-primary/20 py-1">
+                            <p className="text-sm leading-relaxed text-foreground/90 font-medium">{reply.content}</p>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <Clock className="h-3 w-3" />
                             {new Date(reply.createdAt).toLocaleDateString('en-US', {
                                 month: 'short',
                                 day: 'numeric',
@@ -67,15 +68,19 @@ const MessageCard = ({ reply, postId, onReplyDelete }: MessageCardProps) => {
                                 hour: '2-digit',
                                 minute: '2-digit'
                             })}
-                        </CardDescription>
+                        </div>
                     </div>
                     <AlertDialog>
                         <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="icon">
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 -mt-1 -mr-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
                                 <X className="w-4 h-4" />
                             </Button>
                         </AlertDialogTrigger>
-                        <AlertDialogContent>
+                        <AlertDialogContent className="glass-card">
                             <AlertDialogHeader>
                                 <AlertDialogTitle>Delete this reply?</AlertDialogTitle>
                                 <AlertDialogDescription>
@@ -84,8 +89,8 @@ const MessageCard = ({ reply, postId, onReplyDelete }: MessageCardProps) => {
                                 </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={handleDeleteConfirm}>
+                                <AlertDialogCancel className="bg-transparent border-white/10 hover:bg-white/5">Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={handleDeleteConfirm} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
                                     Delete
                                 </AlertDialogAction>
                             </AlertDialogFooter>

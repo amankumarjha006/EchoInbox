@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/form";
 
 import { Input } from "@/components/ui/input";
-import { Loader2, LogIn } from "lucide-react";
+import { Loader2, LogIn, Sparkles, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ThemeToggle from "@/components/theme-toggle";
 
@@ -80,34 +80,27 @@ const Page = () => {
   };
 
   return (
-    <div className="
-      flex justify-center items-center min-h-screen
-      bg-white dark:bg-black
-      transition-colors relative px-4
-    ">
+    <div className="flex justify-center items-center min-h-screen bg-background relative overflow-hidden px-4">
+      {/* Background Elements */}
+      <div className="absolute inset-0 bg-gradient-to-bl from-primary/10 via-background to-background z-0" />
+      <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-cyan-500/10 rounded-full blur-3xl animate-pulse-slow pointer-events-none" />
+      <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-teal-500/10 rounded-full blur-3xl animate-pulse-slow delay-1000 pointer-events-none" />
+
       {/* THEME TOGGLE BUTTON */}
-      <div className="absolute top-4 right-4">
+      <div className="absolute top-4 right-4 z-20">
         <ThemeToggle />
       </div>
 
-      <div className="
-        w-full max-w-md p-6 sm:p-8 space-y-6 sm:space-y-8
-        rounded-lg shadow-lg
-        bg-white/80 dark:bg-[#1a1a1a]/90 backdrop-blur
-        border border-black/10 dark:border-white/10
-        transition-all
-      ">
-        <div className="text-center">
-          <h1 className="
-            text-3xl sm:text-4xl font-extrabold tracking-tight
-            mb-4 sm:mb-6 flex justify-center gap-2
-          ">
-            <span>Join</span>
-            <span className="font-display font-bold italic">WhisperBack</span>
+      <div className="w-full max-w-md p-8 space-y-8 rounded-2xl glass-card relative z-10 animate-slide-up">
+        <div className="text-center space-y-2">
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10 mb-4">
+            <UserPlus className="h-6 w-6 text-primary" />
+          </div>
+          <h1 className="text-3xl font-bold tracking-tight font-display">
+            Join WhisperBack
           </h1>
-
-          <p className="text-muted-foreground text-sm sm:text-base">
-            Sign up to start your anonymous adventure
+          <p className="text-muted-foreground">
+            Start your anonymous adventure today
           </p>
         </div>
 
@@ -131,17 +124,17 @@ const Page = () => {
                         field.onChange(e);
                         debounced(e.target.value);
                       }}
+                      className="bg-background/50 border-white/10 focus:border-primary/50 transition-all"
                     />
                   </FormControl>
-                  <div className="flex items-center gap-2 ">
+                  <div className="flex items-center gap-2 h-5">
                     {isCheckingUsername && (
-                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
                     )}
-                    <p className={`text-sm ${
-                      usernameMessage === "Username is available"
-                        ? "text-green-500"
-                        : "text-red-500"
-                    }`}>
+                    <p className={`text-xs font-medium ${usernameMessage === "Username is available"
+                      ? "text-green-500"
+                      : "text-destructive"
+                      }`}>
                       {usernameMessage}
                     </p>
                   </div>
@@ -162,6 +155,7 @@ const Page = () => {
                       type="email"
                       placeholder="Enter email"
                       {...field}
+                      className="bg-background/50 border-white/10 focus:border-primary/50 transition-all"
                     />
                   </FormControl>
                   <FormMessage />
@@ -181,6 +175,7 @@ const Page = () => {
                       type="password"
                       placeholder="Enter password"
                       {...field}
+                      className="bg-background/50 border-white/10 focus:border-primary/50 transition-all"
                     />
                   </FormControl>
                   <FormMessage />
@@ -192,29 +187,29 @@ const Page = () => {
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="w-full flex items-center justify-center gap-2 px-5 py-3"
+              className="w-full h-11 shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all"
             >
               {isSubmitting ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
                   Please wait
                 </>
               ) : (
                 <>
-                  Sign Up
-                  <LogIn className="h-4 w-4" />
+                  Create Account
+                  <Sparkles className="h-4 w-4 ml-2" />
                 </>
               )}
             </Button>
           </form>
         </Form>
 
-        <div className="text-center mt-2">
-          <p>
+        <div className="text-center pt-4 border-t border-white/10">
+          <p className="text-sm text-muted-foreground">
             Already a member?{" "}
             <Link
               href="/sign-in"
-              className="text-blue-600 dark:text-blue-400 hover:underline"
+              className="text-primary font-medium hover:underline transition-all"
             >
               Sign in
             </Link>

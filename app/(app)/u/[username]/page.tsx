@@ -7,9 +7,8 @@ import { toast } from "sonner";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
-  CardTitle,
+  CardFooter,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -17,19 +16,22 @@ import {
   Loader2,
   MessageSquare,
   User as UserIcon,
-  Calendar,
-  CheckCircle2,
-  XCircle,
   ArrowLeft,
   Share2,
   Sparkles,
-  ArrowRight,
   MessageCircle,
   Plus,
   LogIn,
+  Check,
+  Clock,
+  Quote,
+  CheckCircle2,
+  XCircle,
 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { ApiResponse } from "@/types/ApiResponse";
 import Link from "next/link";
+import { motion } from "framer-motion";
 
 interface Post {
   _id: string;
@@ -45,6 +47,7 @@ export default function PublicProfilePage() {
 
   const [posts, setPosts] = useState<Post[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     fetchPosts();
@@ -69,15 +72,10 @@ export default function PublicProfilePage() {
     const profileUrl = `${window.location.origin}/u/${username}`;
 
     try {
-      if (navigator.share) {
-        await navigator.share({
-          title: `${username}'s Profile`,
-          url: profileUrl,
-        });
-      } else {
-        await navigator.clipboard.writeText(profileUrl);
-        toast.success("Profile link copied! 🔗");
-      }
+      await navigator.clipboard.writeText(profileUrl);
+      setCopied(true);
+      toast.success("Profile link copied! 🔗");
+      setTimeout(() => setCopied(false), 2000);
     } catch (err) {
       console.error("Share failed:", err);
     }
@@ -120,142 +118,155 @@ export default function PublicProfilePage() {
   }
 
   return (
-    <div className="min-h-screen">
-      <div className="container mx-auto px-4 py-8 md:py-12 max-w-3xl">
+    <div className="min-h-screen bg-background relative overflow-hidden">
+      {/* Decorative Background */}
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-500/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 pointer-events-none" />
+
+      <div className="container mx-auto px-4 py-10 max-w-5xl space-y-10 relative z-10">
         {/* Back Button */}
         <Button
           variant="ghost"
           onClick={() => router.back()}
-          className="mb-8 gap-2 -ml-2"
+          className="gap-2 -ml-2 hover:bg-primary/5"
         >
           <ArrowLeft className="h-4 w-4" />
           Back
         </Button>
 
-        {/* Profile Header */}
-        <div className="text-center space-y-6 mb-12">
-          {/* Avatar */}
-          <div className="relative inline-block">
-            <div className="w-28 h-28 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 border-2 border-primary/20 flex items-center justify-center shadow-xl">
-              <UserIcon className="h-14 w-14 text-primary" />
+        {/* HEADER SECTION */}
+        <div className="flex flex-col md:flex-row items-center justify-between gap-6 animate-fade-in">
+          <div className="flex items-center gap-4">
+            <div className="relative">
+              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/10 flex items-center justify-center shadow-lg">
+                <UserIcon className="h-10 w-10 text-primary" />
+              </div>
+              <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-background border-2 border-background flex items-center justify-center">
+                <div className="w-full h-full rounded-full bg-green-500 flex items-center justify-center">
+                  <Sparkles className="h-3 w-3 text-white" />
+                </div>
+              </div>
             </div>
-            <div className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-green-500 border-4 border-background flex items-center justify-center">
-              <CheckCircle2 className="h-4 w-4 text-white" />
-            </div>
-          </div>
 
-          {/* Username & Stats */}
-          <div className="space-y-3">
-            <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight">
-              @{username}
-            </h1>
-            <div className="flex items-center justify-center gap-4 text-muted-foreground">
-              <div className="flex items-center gap-1.5">
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight font-display">
+                @{username}
+              </h1>
+              <div className="flex items-center gap-2 text-muted-foreground mt-1">
                 <MessageSquare className="h-4 w-4" />
                 <span>
                   {posts.length} {posts.length === 1 ? "post" : "posts"}
                 </span>
               </div>
-              <span>•</span>
-              <span>Public Profile</span>
             </div>
           </div>
 
-          {/* Share Button */}
-          <Button variant="outline" onClick={handleShare} className="gap-2">
-            <Share2 className="h-4 w-4" />
-            Share Profile
+          <Button
+            onClick={handleShare}
+            variant="outline"
+            className="glass hover:bg-white/10 gap-2 h-11 px-6 rounded-full"
+          >
+            {copied ? <Check className="h-4 w-4" /> : <Share2 className="h-4 w-4" />}
+            {copied ? "Copied!" : "Share Profile"}
           </Button>
         </div>
 
-        <Separator className="mb-8" />
+        <Separator className="opacity-50" />
 
         {/* Posts Section Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h2 className="text-2xl font-bold">Posts</h2>
-            <p className="text-sm text-muted-foreground mt-1">
-              Tap any post to send an anonymous reply
-            </p>
-          </div>
+        <div className="animate-slide-up delay-100">
+          <h2 className="text-2xl font-bold font-display">Posts</h2>
+          <p className="text-muted-foreground mt-1">
+            Tap any post to send an anonymous reply
+          </p>
         </div>
 
         {/* Posts Grid */}
         {posts.length === 0 ? (
-          <Card className="border-dashed border-2">
-            <CardContent className="text-center py-16 space-y-4">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted">
-                <MessageSquare className="h-8 w-8 text-muted-foreground" />
-              </div>
-              <div className="space-y-2">
-                <p className="font-semibold text-lg">No posts yet</p>
-                <p className="text-sm text-muted-foreground max-w-xs mx-auto">
-                  @{username} hasn't created any posts yet. Check back later!
-                </p>
-              </div>
-            </CardContent>
+          <Card className="border-dashed border-2 bg-transparent shadow-none text-center py-20 animate-slide-up delay-200">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4">
+              <MessageSquare className="h-8 w-8 text-muted-foreground" />
+            </div>
+            <h3 className="text-lg font-medium">No posts yet</h3>
+            <p className="mt-2 text-muted-foreground max-w-sm mx-auto">
+              @{username} hasn't created any posts yet. Check back later!
+            </p>
           </Card>
         ) : (
-          <div className="space-y-4">
+          <div className="grid gap-6 animate-slide-up delay-200">
             {posts.map((post, index) => (
-              <Link
+              <motion.div
                 key={post._id}
-                href={`/u/${username}/posts/${post._id}`}
-                className="block group"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: index * 0.1 }}
               >
-                <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 hover:border-primary/30">
-                  <CardHeader className="pb-3">
-                    {/* Status & Date */}
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <Calendar className="h-3.5 w-3.5" />
-                        <span>{formatDate(post.createdAt)}</span>
+                <Link
+                  href={`/u/${username}/posts/${post._id}`}
+                  className="block group"
+                >
+                  <Card className="group relative overflow-hidden transition-all duration-300 hover:shadow-xl border-border/50 bg-gradient-to-br from-card to-muted/30 dark:from-card dark:to-muted/10">
+                    {/* Decorative accent */}
+                    <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-primary/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+
+                    <CardHeader className="space-y-4 pb-2">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-2 mb-1">
+                          <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                            <UserIcon className="h-4 w-4 text-primary" />
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-sm font-semibold">{username}</span>
+                            <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Anonymous Host</span>
+                          </div>
+                        </div>
                       </div>
 
-                      {post.isAcceptingMessages ? (
-                        <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-green-500/10 border border-green-500/20">
-                          <span className="relative flex h-2 w-2">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                          </span>
-                          <span className="text-xs font-medium text-green-700 dark:text-green-300">
-                            Open
-                          </span>
+                      <div className="relative pl-4 border-l-2 border-primary/20 py-1">
+                        <Quote className="absolute -top-2 -left-2 h-4 w-4 text-primary/20 fill-primary/10" />
+                        <p className="text-lg font-medium leading-relaxed text-foreground/90 font-serif italic line-clamp-3">
+                          {post.content}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground pt-2">
+                        <div className="flex items-center gap-1 bg-muted/50 px-2 py-1 rounded-md">
+                          <Clock className="h-3 w-3" />
+                          <span>{formatDate(post.createdAt)}</span>
                         </div>
-                      ) : (
-                        <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-muted">
-                          <XCircle className="h-3 w-3 text-muted-foreground" />
-                          <span className="text-xs font-medium text-muted-foreground">
+
+                        {post.isAcceptingMessages ? (
+                          <Badge variant="secondary" className="bg-green-500/10 text-green-600 hover:bg-green-500/20 border-green-500/20 gap-1">
+                            <CheckCircle2 className="h-3 w-3" />
+                            Active
+                          </Badge>
+                        ) : (
+                          <Badge variant="secondary" className="bg-muted text-muted-foreground gap-1">
+                            <XCircle className="h-3 w-3" />
                             Closed
-                          </span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Post Content */}
-                    <CardTitle className="text-base leading-relaxed font-medium group-hover:text-primary transition-colors">
-                      {post.content}
-                    </CardTitle>
-                  </CardHeader>
-
-                  <CardContent className="pt-0">
-                    <div className="flex items-center justify-between py-3 px-4 -mx-2 rounded-lg bg-muted/50 group-hover:bg-primary/5 transition-colors">
-                      <div className="flex items-center gap-2 text-sm">
-                        <MessageCircle className="h-4 w-4 text-primary" />
-                        <span className="font-medium">
-                          Plus anonymous reply
-                        </span>
+                          </Badge>
+                        )}
                       </div>
-                      <ArrowRight className="h-4 w-4 text-primary opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-1" />
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
+                    </CardHeader>
+
+                    <CardFooter className="pt-4 border-t bg-muted/20">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full hover:bg-primary/10 hover:text-primary group-hover:bg-primary/5"
+                      >
+                        <MessageCircle className="mr-2 h-4 w-4" />
+                        Send Anonymous Reply
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                </Link>
+              </motion.div>
             ))}
           </div>
         )}
 
-        <footer className="border-t mt-12 pt-10 pb-6 text-center">
+        <footer className="border-t border-white/10 mt-12 pt-10 pb-6 text-center animate-fade-in delay-300">
           <div className="space-y-4 pb-6">
             <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary/10">
               <MessageSquare className="h-6 w-6 text-primary" />
@@ -272,23 +283,22 @@ export default function PublicProfilePage() {
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-1">
               <Link href="/sign-up">
-              <Button size="sm" >
-                  <Plus />
+                <Button size="sm" className="rounded-full px-6 shadow-lg shadow-primary/20">
+                  <Plus className="h-4 w-4 mr-2" />
                   Create Account
-                
-              </Button>
+                </Button>
               </Link>
 
               <Link href="/sign-in">
-                <Button  variant="ghost" size="sm"> 
+                <Button variant="ghost" size="sm" className="rounded-full px-6">
                   Sign In
-                  <LogIn />
+                  <LogIn className="h-4 w-4 ml-2" />
                 </Button>
               </Link>
             </div>
           </div>
 
-          <Separator className="my-4" />
+          <Separator className="my-4 opacity-50" />
 
           <p className="text-xs text-muted-foreground">
             Powered by{" "}

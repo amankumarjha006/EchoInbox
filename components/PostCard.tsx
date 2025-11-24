@@ -28,7 +28,8 @@ import {
   Clock,
   CheckCircle2,
   XCircle,
-  X,
+  User,
+  Quote,
 } from 'lucide-react'
 
 import {
@@ -42,6 +43,7 @@ import {
   AlertDialogHeader,
   AlertDialogFooter
 } from '@/components/ui/alert-dialog'
+import { Badge } from '@/components/ui/badge'
 
 interface PostCardProps {
   postId: string
@@ -50,8 +52,9 @@ interface PostCardProps {
   isAcceptingMessages: boolean
   repliesCount: number
   username: string
-  onToggleAccepting: () => void
-  onDelete: () => void
+  onToggleAccepting?: () => void
+  onDelete?: () => void
+  isPublic?: boolean
 }
 
 export default function PostCard({
@@ -63,6 +66,7 @@ export default function PostCard({
   username,
   onToggleAccepting,
   onDelete,
+  isPublic = false,
 }: PostCardProps) {
 
   const router = useRouter()
@@ -71,23 +75,24 @@ export default function PostCard({
   const [showDeleteDialog, setShowDeleteDialog] = React.useState(false)
 
   const handleShare = async () => {
-    const username = session?.user?.username;
-    if (!username) {
+    const targetUsername = isPublic ? username : session?.user?.username;
+
+    if (!targetUsername) {
       toast.error("Username missing");
       return;
     }
 
-    const profileUrl = `${window.location.origin}/u/${username}`;
+    const url = `${window.location.origin}/u/${targetUsername}/posts/${postId}`;
 
     try {
       if (navigator.share) {
         await navigator.share({
-          title: "Check out my profile!",
-          url: profileUrl,
+          title: "Check out this post!",
+          url: url,
         });
       } else {
-        await navigator.clipboard.writeText(profileUrl);
-        toast.success("Profile link copied to clipboard!");
+        await navigator.clipboard.writeText(url);
+        toast.success("Link copied to clipboard!");
       }
     } catch (err) {
       console.error("Share failed:", err);
@@ -122,37 +127,22 @@ export default function PostCard({
 
   return (
     <>
-      <Card className="group hover:shadow-lg transition-all duration-300 border-primary/10 hover:border-primary/30">
-        <CardHeader className="space-y-4">
-          <div className="space-y-2">
-            <p className="text-base leading-relaxed">{content}</p>
+      <Card className="group relative overflow-hidden transition-all duration-300 hover:shadow-xl border-border/50 bg-gradient-to-br from-card to-muted/30 dark:from-card dark:to-muted/10">
+        {/* Decorative accent */}
+        <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-primary/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
 
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Clock className="h-3 w-3" />
-              <span>{formatDate(createdAt)}</span>
-              <span>•</span>
-              <div className="flex items-center gap-1">
-                <MessageCircle className="h-3 w-3" />
-                <span>{repliesCount} {repliesCount === 1 ? 'reply' : 'replies'}</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              {isAcceptingMessages ? (
-                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-500/10 border border-green-500/20">
-                  <CheckCircle2 className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
-                  <span className="text-xs font-medium text-green-700 dark:text-green-300">
-                    Accepting replies
-                  </span>
-                </div>
-              ) : (
-                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted">
-                  <XCircle className="h-3.5 w-3.5 text-muted-foreground" />
-                  <span className="text-xs font-medium text-muted-foreground">
-                    Closed
-                  </span>
+        <CardHeader className="space-y-4 pb-2">
+          <div className="flex items-start justify-between">
+            <div className="space-y-1">
+              {isPublic && (
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                    <User className="h-4 w-4 text-primary" />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-semibold">{username}</span>
+                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Anonymous Host</span>
+                  </div>
                 </div>
               )}
             </div>
@@ -162,17 +152,16 @@ export default function PostCard({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="h-8 w-8 text-muted-foreground hover:text-foreground"
                 >
                   <MoreVertical className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
 
               <DropdownMenuContent align="end" className="w-48">
-
                 <DropdownMenuItem onClick={handleViewReplies}>
                   <ExternalLink className="h-4 w-4 mr-2" />
-                  View Replies
+                  {isPublic ? "Reply" : "View Replies"}
                 </DropdownMenuItem>
 
                 <DropdownMenuItem onClick={handleShare}>
@@ -180,55 +169,91 @@ export default function PostCard({
                   Copy Link
                 </DropdownMenuItem>
 
-                <DropdownMenuSeparator />
-
-                {/* Delete Post -> opens modal */}
-                <DropdownMenuItem
-                  onClick={() => setShowDeleteDialog(true)}
-                  className="text-destructive focus:text-destructive"
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete Post
-                </DropdownMenuItem>
+                {!isPublic && onDelete && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={() => setShowDeleteDialog(true)}
+                      className="text-destructive focus:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete Post
+                    </DropdownMenuItem>
+                  </>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
+
+          <div className="relative pl-4 border-l-2 border-primary/20 py-1">
+            <Quote className="absolute -top-2 -left-2 h-4 w-4 text-primary/20 fill-primary/10" />
+            <p className="text-lg font-medium leading-relaxed text-foreground/90 font-serif italic">
+              {content}
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3 text-xs text-muted-foreground pt-2">
+            <div className="flex items-center gap-1 bg-muted/50 px-2 py-1 rounded-md">
+              <Clock className="h-3 w-3" />
+              <span>{formatDate(createdAt)}</span>
+            </div>
+
+            <div className="flex items-center gap-1 bg-muted/50 px-2 py-1 rounded-md">
+              <MessageCircle className="h-3 w-3" />
+              <span>{repliesCount} {repliesCount === 1 ? 'reply' : 'replies'}</span>
+            </div>
+
+            {!isPublic && (
+              isAcceptingMessages ? (
+                <Badge variant="secondary" className="bg-green-500/10 text-green-600 hover:bg-green-500/20 border-green-500/20 gap-1">
+                  <CheckCircle2 className="h-3 w-3" />
+                  Active
+                </Badge>
+              ) : (
+                <Badge variant="secondary" className="bg-muted text-muted-foreground gap-1">
+                  <XCircle className="h-3 w-3" />
+                  Closed
+                </Badge>
+              )
+            )}
+          </div>
         </CardHeader>
 
-        <CardFooter className="flex flex-col sm:flex-row gap-3 pt-0">
-          <div className="flex items-center justify-start w-full sm:w-auto gap-3 px-3 py-2 rounded-lg bg-muted/50">
-            <label
-              htmlFor={`toggle-${postId}`}
-              className="text-sm font-medium cursor-pointer select-none"
-            >
-              Accept replies
-            </label>
-            <Switch
-              id={`toggle-${postId}`}
-              checked={isAcceptingMessages}
-              onCheckedChange={onToggleAccepting}
-            />
-          </div>
+        <CardFooter className="flex flex-col sm:flex-row gap-3 pt-4 border-t bg-muted/20">
+          {!isPublic && onToggleAccepting && (
+            <div className="flex items-center justify-between w-full sm:w-auto gap-3">
+              <label
+                htmlFor={`toggle-${postId}`}
+                className="text-sm font-medium cursor-pointer select-none text-muted-foreground"
+              >
+                Accept replies
+              </label>
+              <Switch
+                id={`toggle-${postId}`}
+                checked={isAcceptingMessages}
+                onCheckedChange={onToggleAccepting}
+              />
+            </div>
+          )}
 
           <div className="flex gap-2 w-full sm:w-auto sm:ml-auto ">
             <Button
-              variant="outline"
+              variant="ghost"
               size="sm"
               onClick={handleShare}
-              className=" flex-1 sm:flex-none"
+              className="flex-1 sm:flex-none hover:bg-primary/10 hover:text-primary"
             >
-              <Share2 />
-
+              <Share2 className="h-4 w-4 mr-2" />
+              Share
             </Button>
 
             <Button
               size="sm"
               onClick={handleViewReplies}
-              className="flex-1 sm:flex-none"
+              className="flex-1 sm:flex-none shadow-sm"
             >
-              <MessageCircle />
-             
-              <span className="hidden sm:inline">({repliesCount})</span>
+              <MessageCircle className="mr-2 h-4 w-4" />
+              {isPublic ? "Reply" : "View Details"}
             </Button>
           </div>
         </CardFooter>
@@ -248,7 +273,7 @@ export default function PostCard({
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
-                onDelete()
+                if (onDelete) onDelete()
                 setShowDeleteDialog(false)
               }}
             >

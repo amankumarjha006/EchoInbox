@@ -6,13 +6,13 @@ export async function middleware(request: NextRequest) {
     const token = await getToken({ req: request })
     const url = request.nextUrl
 
-    // Redirect authenticated users away from auth pages
+    // Redirect authenticated users away from auth pages and landing page
     if (token &&
         (
             url.pathname.startsWith('/sign-in') ||
             url.pathname.startsWith('/sign-up') ||
             url.pathname.startsWith('/verify') ||
-            url.pathname === '/'  // Only exact match for homepage
+            url.pathname === '/'
         )
     ) {
         return NextResponse.redirect(new URL('/dashboard', request.url))
