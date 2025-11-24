@@ -15,8 +15,9 @@ export async function POST(request: Request) {
             {
                 success: false,
                 message: "Unauthorized",
-            }
-        ), { status: 401 };
+            },
+            { status: 401 }
+        );
     }
 
     const userId = user._id;
@@ -33,8 +34,9 @@ export async function POST(request: Request) {
                 {
                     success: false,
                     message: "User not found",
-                }
-            ), { status: 404 };
+                },
+                { status: 404 }
+            );
         }
         else {
             return Response.json(
@@ -42,8 +44,9 @@ export async function POST(request: Request) {
                     success: true,
                     message: "Message preferences updated successfully",
                     updatedUser,
-                }
-            ), { status: 200 };
+                },
+                { status: 200 }
+            );
         }
     } catch (error) {
 
@@ -51,8 +54,9 @@ export async function POST(request: Request) {
             {
                 success: false,
                 message: "Failed to update message preferences",
-            }
-        ), { status: 500 };
+            },
+            { status: 500 }
+        );
     }
 }
 
@@ -66,8 +70,9 @@ export async function GET(request: Request) {
             {
                 success: false,
                 message: "Unauthorized",
-            }
-        ), { status: 401 };
+            },
+            { status: 401 }
+        );
     }
 
     const userId = user._id;
@@ -80,16 +85,18 @@ export async function GET(request: Request) {
                 {
                     success: false,
                     message: "User not found",
-                }
-            ), { status: 404 };
+                },
+                { status: 404 }
+            );
         }
         else {
             return Response.json(
                 {
                     success: true,
                     isAcceptingMessages: foundUser.isAcceptingMessages,
-                }
-            ), { status: 200 };
+                },
+                { status: 200 }
+            );
         }
     } catch (error) {
 
@@ -97,8 +104,9 @@ export async function GET(request: Request) {
             {
                 success: false,
                 message: "Failed to fetch message preferences",
-            }
-        ), { status: 500 };
+            },
+            { status: 500 }
+        );
     }
 
 }
