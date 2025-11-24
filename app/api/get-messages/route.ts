@@ -1,57 +1,62 @@
 import { getServerSession } from "next-auth";
+import { NextRequest } from "next/server";
 import { authOptions } from "../auth/[...nextauth]/options";
 import dbConnect from "@/lib/dbConnect";
 import UserModel from "@/model/User";
 import { User } from "next-auth";
 import mongoose from "mongoose";
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
     await dbConnect();
 
     const session = await getServerSession(authOptions);
-    const user: User = session?.user as User
+    const user: User = session?.user as User;
 
     if (!session || !user) {
         return Response.json(
             {
                 success: false,
                 message: "Unauthorized",
-            }
-        ), { status: 401 };
+            },
+            { status: 401 }
+        );
     }
+
     const userId = new mongoose.Types.ObjectId(user._id);
 
     try {
-        const user = await UserModel.aggregate([
-            { $match: { id: userId } },
-            { $unwind: '$messages' },
-            { $sort: { 'messages.createdAt': -1 } },
-            { $group: { _id: '$id', messages: { $push: '$messages' } } }
-        ])
-        if (!user || user.length === 0) {
+        const result = await UserModel.aggregate([
+            { $match: { _id: userId } },
+            { $unwind: "$messages" },
+            { $sort: { "messages.createdAt": -1 } },
+            { $group: { _id: "$_id", messages: { $push: "$messages" } } },
+        ]);
+
+        if (!result || result.length === 0) {
             return Response.json(
                 {
                     success: false,
                     message: "User not found",
-                }
-            ), { status: 404 };
-
-        } else {
-            return Response.json(
-                {
-                    success: true,
-                    message: user[0].messages,
-                }
-            ), { status: 200 };
+                },
+                { status: 404 }
+            );
         }
-    } catch (error) {
 
         return Response.json(
             {
+                success: true,
+                messages: result[0].messages,
+            },
+            { status: 200 }
+        );
+    } catch (error) {
+        console.error(error);
+        return Response.json(
+            {
                 success: false,
-                message: "An unexpected error occured",
-            }
-        ), { status: 500 };
-
+                message: "An unexpected error occurred",
+            },
+            { status: 500 }
+        );
     }
 }
